@@ -1,0 +1,15 @@
+1.Open the filesystem image
+2.Iterate over the inode bitmap
+3. Check each bit and compare if necessary using information from else where.
+********* Information from else where would mean information from the super block and structures like that**************
+4. With this information correct the image that we currently have.
+
+
+
+This is the technical algo for the setion on inode table recovery:
+1. Use the ext2fs_open_inode_scan function to initialize the scan variable which will be used later as an iterator.
+1. Using ext2fs_inode_scan_goto_blockgroup, I place the scan at the start of the block group's inode table i.e. at the first inode of the table. 
+2. After the execution of this function, the scan variable that was passed to this function can be used to traverse the whole inode table till the end(ino = 0). All this while the 2 output arguments which hold the inode structure and the inode number will be used to compare the corresponding bitmap entry using the function ext2fs_test_inode_bitmap2. This function also takes the bitmap as one of the arguments, which we will get from the variable fs->inode_map
+3.We make corrections in the bitmap if there are any issues that we observe
+4.Once we reach the end of all the block groups and there inode table we can exit 
+

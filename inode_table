@@ -1,0 +1,81 @@
+Sure! Let's delve into the details of the inode table in the ext2 filesystem and address your questions step by step.
+
+### Structure of the Inode Table
+
+In the ext2 filesystem, the inode table is a contiguous array of inode structures. Each inode structure contains metadata about a file or directory, such as file size, permissions, timestamps, and pointers to the data blocks.
+
+- **Inode Structure:** In the kernel code, the inode structure for ext2 (usually defined in `fs/ext2/ext2.h`) might look like this:
+  ```c
+  struct ext2_inode {
+      __le16 i_mode;        /* File mode */
+      __le16 i_uid;         /* Low 16 bits of Owner Uid */
+      __le32 i_size;        /* Size in bytes */
+      __le32 i_atime;       /* Access time */
+      __le32 i_ctime;       /* Creation time */
+      __le32 i_mtime;       /* Modification time */
+      __le32 i_dtime;       /* Deletion Time */
+      __le16 i_gid;         /* Low 16 bits of Group Id */
+      __le16 i_links_count; /* Links count */
+      __le32 i_blocks;      /* Blocks count */
+      __le32 i_flags;       /* File flags */
+      union {
+          struct {
+              __le32 l_i_reserved1;
+          } linux1;
+          struct {
+              __le32 h_i_translator;
+          } hurd1;
+          struct {
+              __le32 m_i_reserved1;
+          } masix1;
+      } osd1;                     /* OS dependent 1 */
+      __le32 i_block[EXT2_N_BLOCKS]; /* Pointers to blocks */
+      __le32 i_generation;        /* File version (for NFS) */
+      __le32 i_file_acl;          /* File ACL */
+      __le32 i_dir_acl;           /* Directory ACL */
+      __le32 i_faddr;             /* Fragment address */
+      union {
+          struct {
+              __u8  l_i_frag;    /* Fragment number */
+              __u8  l_i_fsize;   /* Fragment size */
+              __le16 i_pad1;
+              __le16 l_i_uid_high; /* these 2 fields */
+              __le16 l_i_gid_high; /* were reserved2[0] */
+              __u32 l_i_reserved2;
+          } linux2;
+          struct {
+              __u8  h_i_frag;    /* Fragment number */
+              __u8  h_i_fsize;   /* Fragment size */
+              __le16 h_i_mode_high;
+              __le16 h_i_uid_high;
+              __le16 h_i_gid_high;
+              __le32 h_i_author;
+          } hurd2;
+          struct {
+              __u8  m_i_frag;    /* Fragment number */
+              __u8  m_i_fsize;   /* Fragment size */
+              __u8  m_pad1[2];
+              __le32 m_i_reserved2[2];
+          } masix2;
+      } osd2;                     /* OS dependent 2 */
+  };
+  ```
+
+### Inode Table and Block Groups
+
+- **Inodes in Use and Free Inodes:** Yes, the inode table contains both inodes that are currently being used and inodes that are free and waiting to be used. The allocation status of each inode is managed by the inode bitmap, which indicates whether a specific inode is free (0) or allocated (1).
+
+- **Per Block Group:** Each block group in the ext2 filesystem has its own inode table. This means that the inode table is divided among block groups, with each block group managing a portion of the total inode count. The inode table for each block group consists of a list of inodes, regardless of whether they are in use or not.
+
+### Size of the Inode Table
+
+- **Size Determination:** The size of the inode table in each block group is determined by the number of inodes per block group. This number is specified when the filesystem is created and can be influenced by parameters such as the total number of inodes and the total number of block groups.
+- **Calculation:** The number of inodes per block group is typically calculated as part of the filesystem creation process (e.g., using the `mkfs.ext2` tool). The total number of inodes is divided by the number of block groups to determine how many inodes are allocated to each block group.
+
+### Example Calculation
+
+1. **Total Inodes:** Suppose the total number of inodes is \( N \).
+2. **Block Groups:** Suppose there are \( G \) block groups.
+3. **Inodes per Block Group:** The number of inodes per block group is \( I_{bg} = \frac{N}{G} \).
+
+- **Size of Inode Table in Each Block Group:** The size of the inode table in each block group is \( I_{bg} \times
